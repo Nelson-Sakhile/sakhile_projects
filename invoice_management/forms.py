@@ -173,8 +173,6 @@ class InvoiceUpdateForm(forms.ModelForm):
                 }
 
 
-
-
 class CreateUserForm(UserCreationForm):
 	class Meta:
 		model = User

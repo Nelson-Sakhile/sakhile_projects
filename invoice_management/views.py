@@ -1,3 +1,4 @@
+from calendar import c
 from django.shortcuts import render, redirect
 from django.core.mail import send_mail
 from .forms import *
@@ -6,6 +7,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 
+from django.http import FileResponse
+import io
+from reportlab.lib.units import inch
 
 # For Report Lab
 from reportlab.pdfgen import canvas
@@ -23,6 +27,18 @@ def home(request):
         'title': title,
     }
     return render(request, "home.html", context)
+
+
+def code_8(request):
+    return render(request, "code_8.html" )
+
+
+def code_10(request):
+    return render(request, "code_10.html" )
+
+
+def code_14(request):
+    return render(request, "code_14.html" )
 
 
 
@@ -72,11 +88,15 @@ def appointment(request):
     else:
         return render(request, "home.html", {})
 
+
+
 @login_required(login_url='login')
+
 def list_invoice(request):
     title = 'list of Invoices'
     queryset = Invoice.objects.all()
     form = InvoiceSearchForm(request.POST or None)
+    
     context = {
         'title': title,
         'queryset': queryset,
@@ -91,190 +111,150 @@ def list_invoice(request):
         'form': form,
     }
 
-    if form['generate_invoice'].value() == True:
-        instance = queryset
-        data_file = instance
-        num_of_invoices = len(queryset)
-        message = str(num_of_invoices) + " invoices successfully generated."
-        messages.success(request, message)
-
-        def import_data(data_file):
-            invoice_data = data_file
-            for row in invoice_data:
-                invoice_type = row.invoice_type
-                invoice_number = row.invoice_number
-                invoice_date = row.invoice_date
-                name = row.name
-                phone_number = row.phone_number
-
-                line_one = row.line_one
-                line_one_quantity = row.line_one_quantity
-                line_one_unit_price = row.line_one_unit_price
-                line_one_total_price = row.line_one_total_price
-
-                line_two = row.line_two
-                line_two_quantity = row.line_two_quantity
-                line_two_unit_price = row.line_two_unit_price
-                line_two_total_price = row.line_two_total_price
-
-                line_three = row.line_three
-                line_three_quantity = row.line_three_quantity
-                line_three_unit_price = row.line_three_unit_price
-                line_three_total_price = row.line_three_total_price
-
-                line_four = row.line_four
-                line_four_quantity = row.line_four_quantity
-                line_four_unit_price = row.line_four_unit_price
-                line_four_total_price = row.line_four_total_price
-
-                line_five = row.line_five
-                line_five_quantity = row.line_five_quantity
-                line_five_unit_price = row.line_five_unit_price
-                line_five_total_price = row.line_five_total_price
-
-
-                total = row.total
-                pdf_file_name = str(invoice_number) + '_' + str(name) + '.pdf'
-                generate_invoice(str(name), str(invoice_number), 
-                    str(line_one), str(line_one_quantity), str(line_one_unit_price), 
-                    str(line_one_total_price), str(line_two), str(line_two_quantity),
-                    str(line_two_unit_price), str(line_two_total_price), str(line_three),
-                    str(line_three_quantity), str(line_three_unit_price),
-                    str(line_three_total_price), str(line_four), str(line_four_quantity),
-                    str(line_four_unit_price), str(line_four_total_price),  str(line_five),
-                    str(line_five_quantity), str(line_five_unit_price),
-                    str(line_five_total_price),
-                    
-                    str(total), str(phone_number), str(invoice_date),
-                    str(invoice_type), pdf_file_name)
-
-        def generate_invoice(name, invoice_number, 
-                line_one, line_one_quantity, line_one_unit_price, line_one_total_price, 
-                line_two, line_two_quantity, line_two_unit_price, line_two_total_price, 
-                line_three, line_three_quantity, line_three_unit_price, line_three_total_price, 
-                line_four, line_four_quantity, line_four_unit_price, line_four_total_price, 
-                line_five, line_five_quantity, line_five_unit_price, line_five_total_price, 
-                total, phone_number, invoice_date, invoice_type, pdf_file_name):
-            c = canvas.Canvas(pdf_file_name)
-
-            # image of seal
-
-            logo = 'logobrix.jpg'
-            c.drawImage(logo, 50, 700, width=500, height=120)
-
-            c.setFont('Helvetica', 12, leading=None)
-            # if invoice_type == 'Receipt':
-            # 	c.drawCentredString(400, 660, "Receipt Number #:")
-            # elif invoice_type == 'Proforma Invoice':
-            # 	c.drawCentredString(400, 660, "Proforma Invoice #:")
-            # else:
-            c.drawCentredString(400, 660, str(invoice_type) + ':')
-            c.setFont('Helvetica', 12, leading=None)
-            invoice_number_string = str('0000' + invoice_number)
-            c.drawCentredString(490, 660, invoice_number_string)
-
-
-            c.setFont('Helvetica', 12, leading=None)
-            c.drawCentredString(409, 640, "Date:")
-            c.setFont('Helvetica', 12, leading=None)
-            c.drawCentredString(492, 641, invoice_date)
-
-
-            c.setFont('Helvetica', 12, leading=None)
-            c.drawCentredString(397, 620, "Amount:")
-            c.setFont('Helvetica-Bold', 12, leading=None)
-            c.drawCentredString(484, 622, 'R '+total)
-
-
-            c.setFont('Helvetica', 12, leading=None)
-            c.drawCentredString(80, 660, "To:")
-            c.setFont('Helvetica', 12, leading=None)
-            c.drawCentredString(150, 660, name)
-
-            c.setFont('Helvetica', 12, leading=None)
-            c.drawCentredString(98, 640, "Phone #:")
-            c.setFont('Helvetica', 12, leading=None)
-            c.drawCentredString(150, 640, phone_number)     
-
-            c.setFont('Helvetica-Bold', 14, leading=None)
-            c.drawCentredString(310, 580, str(invoice_type))
-            c.drawCentredString(110, 560, "Particulars:")
-            c.drawCentredString(295, 510, "__________________________________________________________")
-            c.drawCentredString(295, 480, "__________________________________________________________")
-            c.drawCentredString(295, 450, "__________________________________________________________")
-            c.drawCentredString(295, 420, "__________________________________________________________")
-            c.drawCentredString(295, 390, "__________________________________________________________")
-            c.drawCentredString(295, 360, "__________________________________________________________")
-            c.drawCentredString(295, 330, "__________________________________________________________")
-            c.drawCentredString(295, 300, "__________________________________________________________")
-            c.drawCentredString(295, 270, "__________________________________________________________")
-            c.drawCentredString(295, 240, "__________________________________________________________")
-            c.drawCentredString(295, 210, "__________________________________________________________")
-
-            c.setFont('Helvetica-Bold', 12, leading=None)
-            c.drawCentredString(110, 520, 'ITEMS')     
-            c.drawCentredString(220, 520, 'QUANTITY')     
-            c.drawCentredString(330, 520, 'UNIT PRICE')     
-            c.drawCentredString(450, 520, 'LINE TOTAL')  
-
-
-            c.setFont('Helvetica', 12, leading=None)
-            c.drawCentredString(110, 490, line_one)     
-            c.drawCentredString(220, 490, line_one_quantity)     
-            c.drawCentredString(330, 490, line_one_unit_price)     
-            c.drawCentredString(450, 490, line_one_total_price)     
-
-            if line_two != '':
-                c.setFont('Helvetica', 12, leading=None)
-                c.drawCentredString(110, 460, line_two)     
-                c.drawCentredString(220, 460, line_two_quantity)     
-                c.drawCentredString(330, 460, line_two_unit_price)     
-                c.drawCentredString(450, 460, line_two_total_price)     
-
-            if line_three != '':
-                c.setFont('Helvetica', 12, leading=None)
-                c.drawCentredString(110, 430, line_three)     
-                c.drawCentredString(220, 430, line_three_quantity)     
-                c.drawCentredString(330, 430, line_three_unit_price)     
-                c.drawCentredString(450, 430, line_three_total_price)     
-
-            if line_four != '':
-                c.setFont('Helvetica', 12, leading=None)
-                c.drawCentredString(110, 400, line_four)     
-                c.drawCentredString(220, 400, line_four_quantity)     
-                c.drawCentredString(330, 400, line_four_unit_price)     
-                c.drawCentredString(450, 400, line_four_total_price)     
-
-            if line_five != '':
-                c.setFont('Helvetica', 12, leading=None)
-                c.drawCentredString(110, 370, line_five)     
-                c.drawCentredString(220, 370, line_five_quantity)     
-                c.drawCentredString(330, 370, line_five_unit_price)     
-                c.drawCentredString(450, 370, line_five_total_price)          
-
-
-
-            # TOTAL
-            c.setFont('Helvetica-Bold', 20, leading=None)
-            c.drawCentredString(400, 140, "TOTAL:")
-            c.setFont('Helvetica-Bold', 20, leading=None)
-            c.drawCentredString(484, 140, 'D'+total) 
-
-
-            # SIGN
-            c.setFont('Helvetica-Bold', 12, leading=None)
-            c.drawCentredString(150, 140, "Signed:__________________")
-            c.setFont('Helvetica-Bold', 12, leading=None)
-            c.drawCentredString(170, 120, 'Manager') 
-
-
-            c.showPage()
-
-            c.save()
-
-        import_data(data_file)
-
+    
     return render(request, 'list_invoice.html', context)
+
+
+def download_invoice(request, pk):
+
+    buffer = io.BytesIO()
+
+    c = canvas.Canvas(buffer, pagesize=letter, bottomup=1)
+    queryset = Invoice.objects.get(id=pk)
+    invoice_file_name = f'{str(queryset.name)}_{str(queryset.invoice_type)}.pdf'
+    
+    # Watermark
+    watermark = 'E-INVOICE-trans.png'
+    c.drawImage(watermark, -10, -100, width=640, height=1000)
+
+    #Type invoice or reciept
+    c.setFont('Helvetica-Bold', 12, leading=None)
+    my_type = str(queryset.invoice_type)
+    c.drawCentredString(300, 610, my_type )
+    
+
+    # Invoice Date
+    c.setFont('Helvetica', 12, leading=None)
+    c.drawCentredString(425, 610, "Date:")
+    c.setFont('Helvetica', 12, leading=None)
+    c.drawString(489, 611, str(queryset.invoice_date) )
+
+    # Invoice Number
+    c.drawCentredString(415, 630, str(queryset.invoice_type) + ':')
+    c.setFont('Helvetica', 12, leading=None)
+    invoice_number_string = str('0000'+ str(queryset.invoice_number))
+    c.drawRightString(550, 630, invoice_number_string)
+
+    # Customer name
+    c.setFont('Helvetica', 12, leading=None)
+    c.drawString(58, 630, "To:")
+    c.setFont('Helvetica', 12, leading=None)
+    c.drawCentredString(150, 630, str(queryset.name) )
+
+    # Phone Number
+    c.setFont('Helvetica', 12, leading=None)
+    c.drawString(58, 610, "Phone: ")
+    c.setFont('Helvetica', 12, leading=None)
+    c.drawCentredString(150, 610, str(queryset.phone_number) )
+
+    # Logo
+    logo = 'bx-logo.png'
+    c.drawImage(logo, 400, 660, width=150, height=100)
+
+
+    # drawing Horizontal line
+    c.line(58, 590, 550, 590) 
+
+    # Table Header
+    c.setFont('Helvetica-Bold', 12, leading=None)
+    c.drawCentredString(130, 480, 'ITEMS')     
+    c.drawCentredString(250, 480, 'QUANTITY')     
+    c.drawCentredString(360, 480, 'UNIT PRICE')     
+    c.drawCentredString(480, 480, 'LINE TOTAL')  
+
+    # Items Listing
+    c.setFont('Helvetica', 12, leading=None)
+    c.drawCentredString(130, 450, str(queryset.line_one) )
+    c.drawCentredString(250, 450, str(queryset.line_one_quantity) )
+    c.drawCentredString(360, 450, str(queryset.line_one_unit_price) )
+    c.drawCentredString(480, 450, str(queryset.line_one_total_price) )
+
+    if queryset.line_two != '':
+        c.setFont('Helvetica', 12, leading=None)
+        c.drawCentredString(130, 420, str(queryset.line_two) )
+        c.drawCentredString(250, 420, str(queryset.line_two_quantity) )
+        c.drawCentredString(360, 420, str(queryset.line_two_unit_price) )
+        c.drawCentredString(480, 420, str(queryset.line_two_total_price) )
+
+    if queryset.line_three != '':
+        c.setFont('Helvetica', 12, leading=None)
+        c.drawCentredString(130, 390, str(queryset.line_three) )
+        c.drawCentredString(250, 390, str(queryset.line_three_quantity) )
+        c.drawCentredString(360, 390, str(queryset.line_three_unit_price) )
+        c.drawCentredString(480, 390, str(queryset.line_three_total_price) )
+
+    if queryset.line_four != '':
+        c.setFont('Helvetica', 12, leading=None)
+        c.drawCentredString(130, 360, str(queryset.line_four) )
+        c.drawCentredString(250, 360, str(queryset.line_four_quantity) )
+        c.drawCentredString(360, 360, str(queryset.line_four_unit_price) )
+        c.drawCentredString(480, 360, str(queryset.line_four_total_price) )
+
+    if queryset.line_five != '':
+        c.setFont('Helvetica', 12, leading=None)
+        c.drawCentredString(130, 330, str(queryset.line_five) )
+        c.drawCentredString(250, 330, str(queryset.line_five_quantity) )
+        c.drawCentredString(360, 330, str(queryset.line_five_unit_price) )
+        c.drawCentredString(480, 330, str(queryset.line_five_total_price) )
+    
+    # drawing Vertical lines
+    c.line(190, 260, 190, 460)
+    c.line(305, 260, 305, 460)
+    c.line(420, 260, 420, 460)
+
+    # TOTAL
+    c.setFont('Helvetica-Bold', 10, leading=None)
+    c.drawString(420, 140, "TOTAL:")
+    c.setFont('Helvetica-Bold', 10, leading=None)
+    c.drawRightString(550, 140, 'R'+str(queryset.total) )
+
+    # Deposit
+    c.setFont('Helvetica-Bold', 10, leading=None)
+    c.drawString(420, 120, "DEPOSIT:")
+    c.setFont('Helvetica-Bold', 10, leading=None)
+    c.drawRightString(550, 120, 'R' + str(queryset.deposit) )
+
+    # amount due
+    c.setFont('Helvetica-Bold', 10, leading=None)
+    c.drawString(420, 100, "AMOUNT DUE:")
+    c.setFont('Helvetica-Bold', 10, leading=None)
+    c.drawRightString(550, 100, 'R' + str(queryset.amount_due) )
+
+    # SIGN
+    c.setFont('Helvetica-Bold', 10, leading=None)
+    c.drawString(58, 140, 'Banking details')
+    c.drawString(58, 120, 'Account Number: 1443722020')
+    c.drawString(58, 100, 'Bank          : Capitec Bank')
+
+    
+    #DLTC text
+    c.setFont('Helvetica-Bold', 12, leading=None)
+    c.drawCentredString(300, 210, 'NB: Payment does not include DLTC booking payments')
+    
+
+    # Watermark
+    top = 'top_design.png'
+    c.drawImage(top, -3, 770, width=620, height=30)
+    bottom = 'bottom_desgin.png'
+    c.drawImage(bottom, 0, -1, width=620, height=50)
+
+    c.showPage()
+    c.save()
+    buffer.seek(0)
+
+    return FileResponse(buffer, as_attachment=True, filename= invoice_file_name)
+
+
 
 def add_invoice(request):
     
@@ -291,8 +271,6 @@ def add_invoice(request):
         'total_invoices': total_invoices,
         'queryset' : queryset,
     }
-
-    return render(request, "new_invoice.html", context)
 
     return render(request, "new_invoice.html", context)
 

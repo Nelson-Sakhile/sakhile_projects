@@ -44,7 +44,7 @@
                     <small>Brixton, Joburg</small>
                 </div>
                 <div class="h-100 d-inline-flex align-items-center">
-                    <small class="far fa-clock text-primary me-2"></small>
+                    <small class="fa fa-envelope text-primary me-2"></small>
                     <small>info@brixtondrives.co.za</small>
                 </div>
             </div>
@@ -129,16 +129,11 @@
                                                         <label>Invoice Number</label>
                                                         {{ form.invoice_number }}
                                                     </div>
-                                                    <br><br>
-                                                    <div class="row">
-                                                        <br>
-                                                        <label>Generate invoice {{ form.generate_invoice }}</label>
-                                                       
-                                                    </div>
+                                
                                                 </div>
                                                 <br>
                                                 <div class="row" style="padding: 0px 11px;">
-                                                        <button type="submit" class="btn btn-secondary">Generate</button>
+                                                        <button type="submit" class="btn btn-secondary">Search</button>
                                                     
                                                 </div>
                                         </form>
@@ -166,6 +161,7 @@
                                                 <th><b>Number</b></th>
                                                 <th><b>Date</b></th>
                                                 <th><b>Delete</b></th>
+                                                <th><b>Download</b></th>
                                     
                                         </tr>
                                     
@@ -178,6 +174,7 @@
                                             <td><small>{{ instance.invoice_number }}</small></td>
                                             <td><small>{{ instance.invoice_date }}</small></td>
                                             <td><a href="{% url 'delete_invoice' instance.id %}" style="color: #125c94;"><small>Delete</small></a></td>
+                                            <td><a href="{% url 'download_invoice' instance.id %}" style="color: #125c94;"><small>Download</small></a></td>
                                     
                                         </tr>
                                     {%  endfor %}

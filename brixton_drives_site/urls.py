@@ -20,6 +20,9 @@ from invoice_management import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home, name="home"),
+    path('code_10/', views.code_10, name="code_10"),
+    path('code_8/', views.code_8, name="code_8"),
+    path('code_14/', views.code_14, name="code_14"),
 	path('login/', views.loginPage, name="login"),  
 	path('logout/', views.logoutUser, name="logout"),
     path('appointment/', views.appointment, name="appointment"),
@@ -27,6 +30,7 @@ urlpatterns = [
     path('new_invoice/', views.add_invoice, name="new_invoice"),
     path('update_invoice/<str:pk>/', views.update_invoice, name="update_invoice"),
     path('delete_invoice/<str:pk>/', views.delete_invoice, name="delete_invoice"),
+    path('download_invoice/<str:pk>/', views.download_invoice, name="download_invoice"),
     
 ]
 
