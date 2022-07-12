@@ -11,3 +11,4 @@ reportlab==3.6.10
 sqlparse==0.4.2
 tzdata==2022.1
 whitenoise==6.2.0
+python-decouple==3.6
